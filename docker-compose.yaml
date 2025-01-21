@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:14
+    container_name: apiname_postgres_dev
+    restart: always
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+
+  api:
+    build: .
+    container_name: apiname_api_dev
+    restart: always
+    # command: sh -c "yarn migration:run && tsx watch src/server.ts" # dev/hot-reload
+    command: sh -c "yarn migration:run && yarn start" # production
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT_NUMBER: ${PORT}
+      DB_CLIENT: ${DATABASE_CLIENT}
+      DB_USER: ${DATABASE_USER}
+      DB_HOST: ${DATABASE_HOST}
+      DB_NAME: ${DATABASE_NAME}
+      DB_PASSWORD: ${DATABASE_PASSWORD}
+      DB_PORT: ${DATABASE_PORT}
+
+      # CHOKIDAR_USEPOLLING: "true" # Enables hot-reload
+
+volumes:
+  postgres_data:
