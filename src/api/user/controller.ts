@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { User as UserEntity } from '@/api/user/entity'
-import { createUserSchema } from '@/api/user/schema'
+import { createUserSchema, updateUserSchema } from '@/api/user/schema'
 import { app } from '@/app'
 import { connectDB } from '@/config/typeorm'
 import { hashPassword, verifyPassword } from '@/utils/password'
@@ -20,7 +20,6 @@ export const userController = {
       return reply.code(400).send({ message: 'Email already in use' })
     }
 
-    // Hash the password
     const hashedPassword = await hashPassword(userInput.password)
 
     // Create and save the user
@@ -66,6 +65,40 @@ export const userController = {
   async logout(_request: FastifyRequest, reply: FastifyReply) {
     // Client-side should handle token removal; nothing specific is needed server-side.
     return reply.send({ message: 'Logged out successfully' })
+  },
+
+  async updateById(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string }
+    const userInput = updateUserSchema.parse(request.body)
+
+    const existingUser = await User.findOne({ where: { id } })
+
+    if (!existingUser)
+      return reply.code(404).send({ message: 'User not found' })
+
+    const hashedPassword = await hashPassword(userInput.password)
+
+    Object.assign(existingUser, { ...userInput, password: hashedPassword })
+
+    User.save(existingUser)
+
+    return reply
+      .code(200)
+      .send({ message: 'User updated successfully', user: existingUser })
+  },
+
+  async deleteById(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string }
+
+    const user = await User.findOne({ where: { id } })
+
+    if (!user) return reply.code(404).send({ message: 'User not found' })
+
+    User.remove(user)
+
+    return reply
+      .code(200)
+      .send({ message: 'User deleted successfully', id: user.id })
   },
 
   async getById(request: FastifyRequest, reply: FastifyReply) {

@@ -5,18 +5,26 @@ import { User } from '@/api/user/entity'
 import { isAuthorized } from '@/utils/authorization'
 
 export async function userRoutes(app: FastifyInstance) {
-  app.post('/', userController.create)
-
-  app.post('/login', userController.login)
-
-  app.post('/logout', { preHandler: [app.authenticate] }, userController.logout)
-
   app.get('/:id', { preHandler: [app.authenticate] }, userController.getById)
 
   app.get(
     '/',
     { preHandler: [app.authenticate, app.authorize(['admin'])] },
     userController.getAll
+  )
+
+  app.post('/', userController.create)
+
+  app.post('/login', userController.login)
+
+  app.post('/logout', { preHandler: [app.authenticate] }, userController.logout)
+
+  app.put('/:id', { preHandler: [app.authenticate] }, userController.updateById)
+
+  app.delete(
+    '/:id',
+    { preHandler: [app.authenticate] },
+    userController.deleteById
   )
 
   // Example authorization
