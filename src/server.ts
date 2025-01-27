@@ -1,7 +1,8 @@
 import 'reflect-metadata'
+
 import { app } from '@/app'
 import { initializeDataSource } from '@/config/typeorm'
-import { env } from '@/env'
+import { env } from '@/config/env'
 
 app.register(async () => await initializeDataSource())
 

@@ -1,9 +1,9 @@
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 
-import { User } from '@/entities/user.entity'
+import { User } from '@/api/user/entity'
 
-import { env } from '../env'
+import { env } from '@/config/env'
 
 const connectDB = new DataSource({
   type: 'postgres',

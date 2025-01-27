@@ -1,9 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
+import { User as UserEntity } from '@/api/user/entity'
+import { createUserSchema } from '@/api/user/schema'
 import { app } from '@/app'
 import { connectDB } from '@/config/typeorm'
-import { User as UserEntity } from '@/entities/user.entity'
-import { createUserSchema } from '@/schemas/user'
 import { hashPassword, verifyPassword } from '@/utils/password'
 
 const User = connectDB.manager.getRepository(UserEntity)

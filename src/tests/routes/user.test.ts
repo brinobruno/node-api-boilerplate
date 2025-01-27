@@ -15,7 +15,7 @@ import {
   initializeDataSource,
   truncateDatabase,
 } from '@/config/typeorm'
-import { User } from '@/entities/user.entity'
+import { User } from '@/api/user/entity'
 import { generateUser } from '@/scripts/generate-mock-data'
 
 const API_URL = '/api/v1/users'

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 
-import { userController } from '@/controllers/user'
-import { User } from '@/entities/user.entity'
+import { userController } from '@/api/user/controller'
+import { User } from '@/api/user/entity'
 import { isAuthorized } from '@/utils/authorization'
 
 export async function userRoutes(app: FastifyInstance) {

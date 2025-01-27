@@ -1,13 +1,13 @@
 import bcrypt from 'bcrypt'
 
-import { User as UserEntity } from '@/entities/user.entity'
-import { env } from '@/env'
+import { User as UserEntity } from '@/api/user/entity'
+import { env } from '@/config/env'
 
 import {
   closeDataSource,
   connectDB,
   initializeDataSource,
-} from '../config/typeorm'
+} from '@/config/typeorm'
 ;(async () => {
   const User = connectDB.manager.getRepository(UserEntity)
 

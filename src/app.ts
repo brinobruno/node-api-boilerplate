@@ -1,9 +1,9 @@
 import fastify from 'fastify'
 
-import { userRoutes } from '@/routes/user'
+import { userRoutes } from '@/api/user/routes'
 import cors from '@fastify/cors'
 import fastifyJwt from '@fastify/jwt'
-import { env } from './env'
+import { env } from '@/config/env'
 
 export const app = fastify({ logger: true })
 

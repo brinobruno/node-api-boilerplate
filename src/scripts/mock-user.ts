@@ -1,6 +1,6 @@
-import { User } from '@/entities/user.entity'
+import { User } from '@/api/user/entity'
 
-import { generateUser } from './generate-mock-data'
+import { generateUser } from '@/scripts/generate-mock-data'
 
 export const mockUser = async () => {
   const userMockData = await generateUser()
