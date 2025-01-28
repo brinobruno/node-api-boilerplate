@@ -25,6 +25,8 @@ const envSchema = z.object({
 
   ADMIN_USER_EMAIL: z.string(),
   ADMIN_USER_PASSWORD: z.string(),
+
+  RESEND_API_KEY: z.string().optional(),
 })
 
 export const _env = envSchema.safeParse(process.env)
