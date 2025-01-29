@@ -10,10 +10,7 @@ import { sendOnboardingEmail } from '@/mail/mail'
 const User = connectDB.manager.getRepository(UserEntity)
 
 // TODO: Add forgot password feature
-// TODO: Add deactivate account feature
-// TODO: Add onboarding email feature
-// TODO: Add deactivated account/deleted account email feature
-// TOOD: Add subscriber options/unsubscribe feature
+// TODO: Add deactivated deleted account email feature
 export const userController = {
   async create(request: FastifyRequest, reply: FastifyReply) {
     const body = createUserSchema.parse(request.body)
