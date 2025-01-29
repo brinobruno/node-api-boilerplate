@@ -19,6 +19,13 @@ export async function userRoutes(app: FastifyInstance) {
 
   app.post('/logout', { preHandler: [app.authenticate] }, userController.logout)
 
+  app.post(
+    '/password-reset-instructions',
+    userController.passwordResetInstructions
+  )
+
+  app.post('/password-reset', userController.passwordReset)
+
   app.put('/:id', { preHandler: [app.authenticate] }, userController.updateById)
 
   app.delete(

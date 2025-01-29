@@ -1,11 +1,21 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 import { User as UserEntity } from '@/api/user/entity'
-import { createUserSchema, updateUserSchema } from '@/api/user/schema'
+import {
+  createUserSchema,
+  passwordResetBodySchema,
+  passwordResetInstructionsSchema,
+  passwordResetQuerySchema,
+  updateUserSchema,
+} from '@/api/user/schema'
 import { app } from '@/app'
 import { connectDB } from '@/config/typeorm'
 import { hashPassword, verifyPassword } from '@/utils/password'
-import { sendOnboardingEmail } from '@/mail/mail'
+import {
+  sendOnboardingEmail,
+  sendPasswordResetInstructionsEmail,
+} from '@/mail/mail'
+import { env } from '@/config/env'
 
 const User = connectDB.manager.getRepository(UserEntity)
 
@@ -36,7 +46,12 @@ export const userController = {
 
     const { id, email, name, role } = user
 
-    const token = app.jwt.sign({ id, role })
+    const token = app.jwt.sign(
+      { id, role },
+      {
+        expiresIn: '30d',
+      }
+    )
 
     await sendOnboardingEmail({ email, name })
 
@@ -64,7 +79,12 @@ export const userController = {
     }
 
     // Generate JWT
-    const token = app.jwt.sign({ id: user.id, role: user.role })
+    const token = app.jwt.sign(
+      { id: user.id, role: user.role },
+      {
+        expiresIn: '30d',
+      }
+    )
 
     return reply.send({ token })
   },
@@ -72,6 +92,79 @@ export const userController = {
   async logout(_request: FastifyRequest, reply: FastifyReply) {
     // Client-side should handle token removal; nothing specific is needed server-side.
     return reply.send({ message: 'Logged out successfully' })
+  },
+
+  async passwordResetInstructions(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    const { email } = passwordResetInstructionsSchema.parse(request.body)
+
+    try {
+      const user = await User.findOne({
+        where: { email: email },
+      })
+
+      if (!user) {
+        return reply.code(404).send({ message: 'User not found by email' })
+      }
+
+      const token = await app.jwt.sign(
+        { id: user.id, email: user.email },
+        { expiresIn: '1h' }
+      )
+
+      const resetURL = `${env.BASE_URL}/resetpassword?id=${user.id}&token=${token}`
+
+      await sendPasswordResetInstructionsEmail({
+        email: user.email,
+        name: user.name,
+        resetUrl: resetURL,
+      })
+
+      return reply
+        .code(200)
+        .send({ message: 'Instructions sent successfully', user, token })
+    } catch (error) {
+      console.error('Error sending password reset instructions', error)
+      return reply.code(500).send({
+        message: 'Error sending password reset instructions',
+        error,
+      })
+    }
+  },
+
+  async passwordReset(request: FastifyRequest, reply: FastifyReply) {
+    const { id, token } = passwordResetQuerySchema.parse(request.query)
+    const { password } = passwordResetBodySchema.parse(request.body)
+
+    try {
+      const user = await User.findOne({
+        where: { id: id },
+      })
+
+      if (!user) {
+        return reply.code(404).send({ message: 'User not found by email' })
+      }
+
+      const verify = app.jwt.verify(token)
+
+      const hashedPassword = await hashPassword(password)
+
+      Object.assign(user, { ...user, password: hashedPassword })
+
+      User.save(user)
+
+      return reply
+        .code(200)
+        .send({ message: 'Password updated successfully', user })
+    } catch (error) {
+      console.error('Error updating password', error)
+      return reply.code(500).send({
+        message: 'Error updating password',
+        error,
+      })
+    }
   },
 
   async updateById(request: FastifyRequest, reply: FastifyReply) {

@@ -13,3 +13,16 @@ export const updateUserSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['admin', 'client']).optional().default('client'),
 })
+
+export const passwordResetInstructionsSchema = z.object({
+  email: z.string().email('Invalid email'),
+})
+
+export const passwordResetQuerySchema = z.object({
+  id: z.string(),
+  token: z.string(),
+})
+
+export const passwordResetBodySchema = z.object({
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
