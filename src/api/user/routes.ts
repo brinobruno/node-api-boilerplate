@@ -3,9 +3,14 @@ import { FastifyInstance } from 'fastify'
 import { userController } from '@/api/user/controller'
 import { User } from '@/api/user/entity'
 import { isAuthorized } from '@/utils/authorization'
+import { fetchUserById } from './middleware'
 
 export async function userRoutes(app: FastifyInstance) {
-  app.get('/:id', { preHandler: [app.authenticate] }, userController.getById)
+  app.get(
+    '/:id',
+    { preHandler: [app.authenticate, fetchUserById] },
+    userController.getById
+  )
 
   app.get(
     '/',
@@ -26,11 +31,15 @@ export async function userRoutes(app: FastifyInstance) {
 
   app.post('/password-reset', userController.passwordReset)
 
-  app.put('/:id', { preHandler: [app.authenticate] }, userController.updateById)
+  app.put(
+    '/:id',
+    { preHandler: [app.authenticate, fetchUserById] },
+    userController.updateById
+  )
 
   app.delete(
     '/:id',
-    { preHandler: [app.authenticate] },
+    { preHandler: [app.authenticate, fetchUserById] },
     userController.deleteById
   )
 

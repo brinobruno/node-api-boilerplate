@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
 // TODO: Remove role as an input everywhere
+export const findUserSchema = z.object({
+  id: z.string(),
+})
+
 export const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email'),
