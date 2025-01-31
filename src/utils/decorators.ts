@@ -1,5 +1,6 @@
 import { app } from '@/app'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { ForbiddenError, UnauthorizedError } from './errors'
 
 // Decorator to access user in requests
 export function registerDecorators(app: FastifyInstance) {
@@ -9,20 +10,22 @@ export function registerDecorators(app: FastifyInstance) {
       try {
         await request.jwtVerify()
       } catch (err) {
-        reply.send(err)
+        throw new UnauthorizedError('Invalid or expired token')
       }
     }
   )
 
   app.decorate('authorize', (roles: string[]) => {
-    return async function (request: any, reply: any) {
+    return async function (request: any, reply: FastifyReply) {
       try {
         await request.jwtVerify()
         if (!roles.includes(request.user.role)) {
-          return reply.code(403).send({ message: 'Forbidden' })
+          throw new ForbiddenError(
+            'You do not have permission to access this resource'
+          )
         }
       } catch (err) {
-        reply.send(err)
+        throw err // Propagate the error to the global error handler
       }
     }
   })

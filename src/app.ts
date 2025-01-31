@@ -5,6 +5,7 @@ import cors from '@fastify/cors'
 import fastifyJwt from '@fastify/jwt'
 import { env } from '@/config/env'
 import { registerDecorators } from './utils/decorators'
+import { AppError } from './utils/errors'
 
 export const app = fastify({ logger: true })
 
@@ -18,6 +19,24 @@ app.register(fastifyJwt, {
 })
 
 registerDecorators(app)
+
+app.setErrorHandler((error, request, reply) => {
+  request.log.error(error)
+
+  if (error instanceof AppError) {
+    // Handle custom errors
+    reply.code(error.statusCode).send({
+      message: error.message,
+      details: error.details,
+    })
+  } else {
+    // Handle unexpected errors
+    reply.code(500).send({
+      message: 'Internal Server Error',
+      details: process.env.NODE_ENV === 'development' ? error : undefined,
+    })
+  }
+})
 
 app.register(userRoutes, {
   prefix: 'api/v1/users',

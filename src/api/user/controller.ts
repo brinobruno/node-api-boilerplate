@@ -16,6 +16,11 @@ import {
   sendPasswordResetInstructionsEmail,
 } from '@/mail/mail'
 import { env } from '@/config/env'
+import {
+  NotFoundError,
+  UnauthorizedError,
+  ValidationError,
+} from '@/utils/errors'
 
 const User = connectDB.manager.getRepository(UserEntity)
 
@@ -29,29 +34,21 @@ export const userController = {
       where: { email: body.email },
     })
 
-    if (existingUser) {
-      return reply.code(400).send({ message: 'Email already in use' })
-    }
+    if (existingUser) throw new ValidationError('Email already in use')
 
     const hashedPassword = await hashPassword(body.password)
 
-    // Create and save the user
     const user = User.create({
       ...body,
       password: hashedPassword,
-      role: 'client', // API should not be able to create admin role user
+      role: 'client', // should not be able to create admin role through api
     })
 
     await user.save()
 
     const { id, email, name, role } = user
 
-    const token = app.jwt.sign(
-      { id, role },
-      {
-        expiresIn: '30d',
-      }
-    )
+    const token = app.jwt.sign({ id, role }, { expiresIn: '30d' })
 
     await sendOnboardingEmail({ email, name })
 
@@ -68,8 +65,8 @@ export const userController = {
 
     const user = await User.findOne({ where: { email } })
 
-    if (!user) {
-      return reply.code(401).send({ message: 'Invalid email or password' })
+    if (!user || !(await verifyPassword(password, user.password))) {
+      throw new UnauthorizedError('Invalid email or password')
     }
 
     const isPasswordValid = await verifyPassword(password, user.password)
@@ -100,71 +97,51 @@ export const userController = {
   ) {
     const { email } = passwordResetInstructionsSchema.parse(request.body)
 
-    try {
-      const user = await User.findOne({
-        where: { email: email },
-      })
+    const user = await User.findOne({
+      where: { email: email },
+    })
 
-      if (!user) {
-        return reply.code(404).send({ message: 'User not found by email' })
-      }
+    if (!user) throw new NotFoundError('User not found by email')
 
-      const token = await app.jwt.sign(
-        { id: user.id, email: user.email },
-        { expiresIn: '1h' }
-      )
+    const token = await app.jwt.sign(
+      { id: user.id, email: user.email },
+      { expiresIn: '1h' }
+    )
 
-      const resetURL = `${env.BASE_URL}/resetpassword?id=${user.id}&token=${token}`
+    const resetURL = `${env.BASE_URL}/resetpassword?id=${user.id}&token=${token}`
 
-      await sendPasswordResetInstructionsEmail({
-        email: user.email,
-        name: user.name,
-        resetUrl: resetURL,
-      })
+    await sendPasswordResetInstructionsEmail({
+      email: user.email,
+      name: user.name,
+      resetUrl: resetURL,
+    })
 
-      return reply
-        .code(200)
-        .send({ message: 'Instructions sent successfully', user, token })
-    } catch (error) {
-      reply.log.error('Error sending password reset instructions', error)
-      return reply.code(500).send({
-        message: 'Error sending password reset instructions',
-        error,
-      })
-    }
+    return reply
+      .code(200)
+      .send({ message: 'Instructions sent successfully', user, token })
   },
 
   async passwordReset(request: FastifyRequest, reply: FastifyReply) {
     const { id, token } = passwordResetQuerySchema.parse(request.query)
     const { password } = passwordResetBodySchema.parse(request.body)
 
-    try {
-      const user = await User.findOne({
-        where: { id: id },
-      })
+    const user = await User.findOne({
+      where: { id: id },
+    })
 
-      if (!user) {
-        return reply.code(404).send({ message: 'User not found by email' })
-      }
+    if (!user) throw new NotFoundError('User not found by email')
 
-      const verify = app.jwt.verify(token)
+    const verify = app.jwt.verify(token)
 
-      const hashedPassword = await hashPassword(password)
+    const hashedPassword = await hashPassword(password)
 
-      Object.assign(user, { ...user, password: hashedPassword })
+    Object.assign(user, { ...user, password: hashedPassword })
 
-      User.save(user)
+    User.save(user)
 
-      return reply
-        .code(200)
-        .send({ message: 'Password updated successfully', user })
-    } catch (error) {
-      reply.log.error('Error updating password', error)
-      return reply.code(500).send({
-        message: 'Error updating password',
-        error,
-      })
-    }
+    return reply
+      .code(200)
+      .send({ message: 'Password updated successfully', user })
   },
 
   async updateById(request: FastifyRequest, reply: FastifyReply) {
