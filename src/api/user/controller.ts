@@ -126,7 +126,7 @@ export const userController = {
         .code(200)
         .send({ message: 'Instructions sent successfully', user, token })
     } catch (error) {
-      console.error('Error sending password reset instructions', error)
+      reply.log.error('Error sending password reset instructions', error)
       return reply.code(500).send({
         message: 'Error sending password reset instructions',
         error,
@@ -159,7 +159,7 @@ export const userController = {
         .code(200)
         .send({ message: 'Password updated successfully', user })
     } catch (error) {
-      console.error('Error updating password', error)
+      reply.log.error('Error updating password', error)
       return reply.code(500).send({
         message: 'Error updating password',
         error,

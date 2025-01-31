@@ -14,19 +14,19 @@ const startServer = async () => {
       port: env.PORT,
     })
     .then(address => {
-      console.log(
+      app.log.info(
         `Worker ${process.pid} started. Server running on ${address} @ ${env.NODE_ENV}`
       )
     })
     .catch(error => {
-      console.error('Server failed to start:', error)
+      app.log.error('Server failed to start:', error)
       process.exit(1)
     })
 }
 
 // Clustering logic
 if (cluster.isPrimary) {
-  console.log(`Primary ${process.pid} is running`)
+  app.log.info(`Primary ${process.pid} is running`)
 
   // Fork workers based on the number of CPU cores
   const numCPUs = os.cpus().length
@@ -36,16 +36,16 @@ if (cluster.isPrimary) {
 
   // Handle worker exit events
   cluster.on('exit', (worker, code, signal) => {
-    console.log(
+    app.log.info(
       `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
     )
-    console.log('Forking a new worker...')
+    app.log.info('Forking a new worker...')
     cluster.fork() // Replace the dead worker
   })
 } else {
   // Workers will start the server
   startServer().catch(error => {
-    console.error('Failed to start server:', error)
+    app.log.error('Failed to start server:', error)
     process.exit(1)
   })
 }

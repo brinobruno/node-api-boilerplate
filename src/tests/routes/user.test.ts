@@ -51,7 +51,7 @@ describe('User', async () => {
 
         expect(user).toBeDefined()
       } catch (error) {
-        console.error(error)
+        app.log.error(error)
       }
     })
   })
@@ -65,7 +65,7 @@ describe('User', async () => {
 
         expect(user).toBeUndefined()
       } catch (error) {
-        console.error(error)
+        app.log.error(error)
       }
     })
   })
@@ -84,7 +84,7 @@ describe('User', async () => {
         expect(response.body.user.role).toBe('client')
         expect(response.body.user.password).not.toEqual(USER_PASSWORD)
       } catch (error) {
-        console.error(error)
+        app.log.error(error)
       }
     })
 
@@ -105,7 +105,7 @@ describe('User', async () => {
         expect(response.status).toBe(200)
         expect(response.body.token).toBeDefined()
       } catch (error) {
-        console.error(error)
+        app.log.error(error)
       }
     })
 
@@ -126,7 +126,7 @@ describe('User', async () => {
         expect(response.status).toBe(403)
         expect(response.body.message).toBe('Forbidden')
       } catch (error) {
-        console.error(error)
+        app.log.error(error)
       }
     })
   })

@@ -1,5 +1,7 @@
-import { env } from '@/config/env'
 import { Resend } from 'resend'
+
+import { app } from '@/app'
+import { env } from '@/config/env'
 import { onboardingEmail } from './templates/onboarding'
 import { resetPasswordInstructionsEmail } from './templates/reset-password-instructions'
 
@@ -22,9 +24,9 @@ export async function sendOnboardingEmail({
     html: onboardingEmail(name),
   })
 
-  if (error) return console.error({ message: 'error sending email', error })
+  if (error) return app.log.error({ message: 'error sending email', error })
 
-  console.log(data)
+  app.log.info(data)
 }
 
 interface ISendPasswordResetInstructionsEmail {
@@ -46,7 +48,7 @@ export async function sendPasswordResetInstructionsEmail({
     html: resetPasswordInstructionsEmail(name, resetUrl),
   })
 
-  if (error) return console.error({ message: 'error sending email', error })
+  if (error) return app.log.error({ message: 'error sending email', error })
 
-  console.log(data)
+  app.log.info(data)
 }
